@@ -7,12 +7,14 @@ const collectionRef = collection(db, 'todo');
 const Todo = () => {
     const [createTodo, setCreateTodo] =useState('');
     const [todos, setTodo] = useState([]);
+    const [isChecked, setIsChecked] =useState([]);
     useEffect(() => {
         const getTodo = async () => {
             await getDocs(collectionRef).then((todo) => {
                 let todoData = todo.docs.map((doc) => ({...doc.data(), id:doc.id}));
                 console.log(todoData)
                 setTodo(todoData);
+                setIsChecked(todoData);
             }).catch((err) => {
                 console.log(err);
             })
@@ -44,6 +46,19 @@ const Todo = () => {
             console.log(err);
         }
     }
+    const checkHandler = async (e, todo) => {
+        setIsChecked( state => {
+            const indexToUpdate = state.findIndex( checkbox => checkbox.id.toString() === e.target.name);
+            let newState = state.splice();
+            newState.splice(indexToUpdate, 1, {
+                ...state[indexToUpdate],
+                isChecked:! state[indexToUpdate].isChecked
+            })
+            setTodo(newState);
+            return newState
+        });
+        
+    }
     return (
         <>
             <div className="container">
@@ -58,17 +73,20 @@ const Todo = () => {
                                     className="btn btn-info">Add Todo
                                 </button>
                                 {
-                                    todos.map(({todo, id}) => {
+                                    todos.map(({todo, id, isChecked}) => {
                                         return(
 
                                             <div className="todo-list" key={id}>
                                                 <div className="todo-item">
                                                     <hr />
-                                                    <span>
+                                                    <span className={`${isChecked ? 'done' :''}`}>
                                                         <div className="checker" >
                                                             <span className="" >
                                                                 <input
                                                                     type="checkbox"
+                                                                    defaultChecked={isChecked}
+                                                                    name={id}
+                                                                    onChange={(e) => checkHandler(e,todo)}
                                                                 />
                                                             </span>
                                                         </div>
