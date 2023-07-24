@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import { db } from '../../Services/firebase.config';
 import EditTodo from '../EditTodo/EditTodo';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp,getDocs,doc, deleteDoc} from 'firebase/firestore';
 const collectionRef = collection(db, 'todo');
 
 const Todo = () => {
     const [createTodo, setCreateTodo] =useState('');
+    const [todos, setTodo] = useState([]);
+    useEffect(() => {
+        const getTodo = async () => {
+            await getDocs(collectionRef).then((todo) => {
+                let todoData = todo.docs.map((doc) => ({...doc.data(), id:doc.id}));
+                console.log(todoData)
+                setTodo(todoData);
+            }).catch((err) => {
+                console.log(err);
+            })
+        }
+        getTodo()
+    },[]);
     const submitTodo = async (e) => {
         e.preventDefault();
         try {
@@ -17,6 +30,17 @@ const Todo = () => {
             window.location.reload();
         }
         catch (err) {
+            console.log(err);
+        }
+    }
+    const deleteTodo = async (id) => {
+        try{
+            window.confirm("Are You Sure Want to Delete This Todo?");
+            const documentRef = doc(db, 'todo', id);
+            await deleteDoc(documentRef);
+            window.location.reload();
+        }
+        catch(err){
             console.log(err);
         }
     }
@@ -33,30 +57,35 @@ const Todo = () => {
                                     type="button"
                                     className="btn btn-info">Add Todo
                                 </button>
+                                {
+                                    todos.map(({todo, id}) => {
+                                        return(
 
-
-                                <div className="todo-list">
-                                    <div className="todo-item">
-                                        <hr />
-                                        <span>
-                                            <div className="checker" >
-                                                <span className="" >
-                                                    <input
-                                                        type="checkbox"
-                                                    />
-                                                </span>
+                                            <div className="todo-list" key={id}>
+                                                <div className="todo-item">
+                                                    <hr />
+                                                    <span>
+                                                        <div className="checker" >
+                                                            <span className="" >
+                                                                <input
+                                                                    type="checkbox"
+                                                                />
+                                                            </span>
+                                                        </div>
+                                                        &nbsp; {todo}<br />
+                                                        <i>23/22/12</i>
+                                                    </span>
+                                                    <span className=" float-end mx-3">
+                                                        <EditTodo id={id} todo={todo}/></span>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-danger float-end" onClick={() => deleteTodo(id)} >Delete
+                                                    </button>
+                                                </div>
                                             </div>
-                                            &nbsp; Go hard or Go Home<br />
-                                            <i>10/11/2022</i>
-                                        </span>
-                                        <span className=" float-end mx-3">
-                                            <EditTodo /></span>
-                                        <button
-                                            type="button"
-                                            className="btn btn-danger float-end">Delete
-                                        </button>
-                                    </div>
-                                </div>
+                                        )
+                                    })
+                                }
                             </div>
                         </div>
                     </div>
